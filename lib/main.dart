@@ -1,42 +1,49 @@
 import 'dart:async';
-
+import 'dart:ui';
 import 'package:flutter/material.dart';
 
 void main() {
-  runApp(const MyApp());
+  runApp(const StopwatchApp());
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+/// Root of the App
+class StopwatchApp extends StatelessWidget {
+  const StopwatchApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      debugShowCheckedModeBanner: false,
       title: 'Stopwatch App',
       theme: ThemeData(
-        primarySwatch: Colors.blue,
+        scaffoldBackgroundColor: Colors.black,
         fontFamily: 'Roboto',
+        colorScheme: ColorScheme.fromSwatch().copyWith(
+          primary: const Color(0xFFFFA07A),
+          secondary: Colors.white,
+        ),
       ),
-      home: const HomeApp(),
+      home: const StopwatchScreen(),
     );
   }
 }
 
-class HomeApp extends StatefulWidget {
-  const HomeApp({super.key});
+/// Home Screen StatefulWidget
+class StopwatchScreen extends StatefulWidget {
+  const StopwatchScreen({super.key});
 
   @override
-  State<HomeApp> createState() => _HomeAppState();
+  State<StopwatchScreen> createState() => _StopwatchScreenState();
 }
 
-class _HomeAppState extends State<HomeApp> with TickerProviderStateMixin {
-  // Timer variables
+/// Stopwatch State & UI
+class _StopwatchScreenState extends State<StopwatchScreen>
+    with TickerProviderStateMixin {
   int _milliseconds = 0;
   Timer? _timer;
   bool _isRunning = false;
   final List<Duration> _laps = [];
-  
-  // Animation controller for smooth transitions
+
   late AnimationController _pulseController;
   late Animation<double> _pulseAnimation;
 
@@ -44,16 +51,13 @@ class _HomeAppState extends State<HomeApp> with TickerProviderStateMixin {
   void initState() {
     super.initState();
     _pulseController = AnimationController(
-      duration: const Duration(seconds: 1),
       vsync: this,
+      duration: const Duration(seconds: 1),
     );
-    _pulseAnimation = Tween<double>(
-      begin: 1.0,
-      end: 1.05,
-    ).animate(CurvedAnimation(
-      parent: _pulseController,
-      curve: Curves.easeInOut,
-    ));
+
+    _pulseAnimation = Tween<double>(begin: 1.0, end: 1.05).animate(
+      CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
+    );
   }
 
   @override
@@ -63,404 +67,218 @@ class _HomeAppState extends State<HomeApp> with TickerProviderStateMixin {
     super.dispose();
   }
 
-  // Convert milliseconds to Duration
   Duration get _currentTime => Duration(milliseconds: _milliseconds);
 
-  // Format duration to string
   String _formatDuration(Duration duration) {
     String twoDigits(int n) => n.toString().padLeft(2, '0');
-    String hours = twoDigits(duration.inHours);
-    String minutes = twoDigits(duration.inMinutes.remainder(60));
-    String seconds = twoDigits(duration.inSeconds.remainder(60));
-    String milliseconds = (duration.inMilliseconds.remainder(1000) ~/ 10)
+    final hours = twoDigits(duration.inHours);
+    final minutes = twoDigits(duration.inMinutes.remainder(60));
+    final seconds = twoDigits(duration.inSeconds.remainder(60));
+    final ms = (duration.inMilliseconds.remainder(1000) ~/ 10)
         .toString()
         .padLeft(2, '0');
-    
-    if (duration.inHours > 0) {
-      return '$hours:$minutes:$seconds.$milliseconds';
-    } else {
-      return '$minutes:$seconds.$milliseconds';
-    }
+
+    return duration.inHours > 0
+        ? '$hours:$minutes:$seconds.$ms'
+        : '$minutes:$seconds.$ms';
   }
 
-  // Start timer function
   void _start() {
-    setState(() {
-      _isRunning = true;
-    });
-    
     _pulseController.repeat(reverse: true);
-    
     _timer = Timer.periodic(const Duration(milliseconds: 10), (timer) {
       setState(() {
         _milliseconds += 10;
       });
     });
+    setState(() => _isRunning = true);
   }
 
-  // Stop timer function
   void _stop() {
-    _timer?.cancel();
     _pulseController.stop();
-    setState(() {
-      _isRunning = false;
-    });
+    _timer?.cancel();
+    setState(() => _isRunning = false);
   }
 
-  // Reset function
   void _reset() {
-    _timer?.cancel();
     _pulseController.reset();
+    _timer?.cancel();
     setState(() {
       _milliseconds = 0;
-      _isRunning = false;
       _laps.clear();
+      _isRunning = false;
     });
   }
 
-  // Add lap function
   void _addLap() {
     if (_isRunning) {
-      setState(() {
-        _laps.add(_currentTime);
-      });
+      setState(() => _laps.add(_currentTime));
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final Color primary = const Color(0xFFFFA07A);
+    final Color secondary = Colors.white;
+
     return Scaffold(
-      backgroundColor: const Color(0xFF1C2757),
+      backgroundColor: Colors.black,
       body: SafeArea(
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            final screenWidth = constraints.maxWidth;
-            final screenHeight = constraints.maxHeight;
-            
-            final isTablet = screenWidth > 600;
-            final isLandscape = screenWidth > screenHeight;
-            
-            // Responsive dimensions
-            final titleFontSize = isTablet ? 36.0 : (screenWidth * 0.07);
-            final timerFontSize = isTablet ? 80.0 : (screenWidth * 0.15);
-            final lapFontSize = isTablet ? 18.0 : (screenWidth * 0.04);
-            
-            final horizontalPadding = screenWidth * 0.04;
-            final verticalSpacing = screenHeight * 0.02;
-            
-            return Padding(
-              padding: EdgeInsets.symmetric(
-                horizontal: horizontalPadding,
-                vertical: verticalSpacing,
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            children: [
+              /// Title
+              Text(
+                "Stopwatch",
+                style: TextStyle(
+                  fontSize: 32,
+                  color: primary,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
-              child: Column(
-                children: [
-                  // Title with gradient
-                  ShaderMask(
-                    shaderCallback: (bounds) => const LinearGradient(
-                      colors: [Colors.blue, Colors.cyan],
-                      begin: Alignment.centerLeft,
-                      end: Alignment.centerRight,
-                    ).createShader(bounds),
+              const SizedBox(height: 30),
+
+              /// Timer Display
+              AnimatedBuilder(
+                animation: _pulseAnimation,
+                builder: (_, child) => Transform.scale(
+                  scale: _isRunning ? _pulseAnimation.value : 1.0,
+                  child: Container(
+                    padding: const EdgeInsets.all(30),
+                    decoration: BoxDecoration(
+                      color: Colors.grey[900],
+                      borderRadius: BorderRadius.circular(20),
+                      boxShadow: [
+                        BoxShadow(
+                          color: primary.withOpacity(0.4),
+                          blurRadius: 12,
+                        ),
+                      ],
+                    ),
                     child: Text(
-                      "Stopwatch",
+                      _formatDuration(_currentTime),
                       style: TextStyle(
-                        color: const Color.fromARGB(242, 241, 116, 14),
-                        fontSize: titleFontSize,
-                        fontWeight: FontWeight.bold,
+                        fontSize: 48,
+                        fontWeight: FontWeight.w400,
+                        color: secondary,
+                        letterSpacing: 2,
+                        fontFeatures: const [FontFeature.tabularFigures()],
                       ),
                     ),
                   ),
-                  
-                  SizedBox(height: verticalSpacing * 2),
-                  
-                  // Timer display with animation
-                  AnimatedBuilder(
-                    animation: _pulseAnimation,
-                    builder: (context, child) {
-                      return Transform.scale(
-                        scale: _isRunning ? _pulseAnimation.value : 1.0,
-                        child: Container(
-                          padding: EdgeInsets.all(isTablet ? 30.0 : 20.0),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFF323F68).withOpacity(0.8),
-                            borderRadius: BorderRadius.circular(20.0),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.blue.withOpacity(0.3),
-                                blurRadius: 20.0,
-                                spreadRadius: 2.0,
-                              ),
-                            ],
+                ),
+              ),
+
+              const SizedBox(height: 20),
+
+              /// Laps Display
+              Expanded(
+                child: Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.grey[850],
+                    borderRadius: BorderRadius.circular(15),
+                  ),
+                  child: _laps.isEmpty
+                      ? Center(
+                          child: Text(
+                            "No laps recorded",
+                            style: TextStyle(color: primary),
                           ),
-                          child: FittedBox(
-                            fit: BoxFit.scaleDown,
-                            child: Text(
-                              _formatDuration(_currentTime),
-                              style: TextStyle(
-                                color: const Color.fromARGB(242, 241, 116, 14),
-                                fontSize: timerFontSize,
-                                fontWeight: FontWeight.w300,
-                                letterSpacing: 2.0,
-                                fontFeatures: const [
-                                  FontFeature.tabularFigures()
+                        )
+                      : ListView.builder(
+                          itemCount: _laps.length,
+                          itemBuilder: (_, index) {
+                            final lap = _laps[index];
+                            final diff = index == 0
+                                ? lap
+                                : lap - _laps[index - 1];
+                            return Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 4),
+                              child: Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    "Lap ${index + 1}",
+                                    style: TextStyle(
+                                        color: primary, fontSize: 16),
+                                  ),
+                                  Column(
+                                    crossAxisAlignment: CrossAxisAlignment.end,
+                                    children: [
+                                      Text(
+                                        _formatDuration(lap),
+                                        style: TextStyle(color: secondary),
+                                      ),
+                                      if (index > 0)
+                                        Text(
+                                          "+${_formatDuration(diff)}",
+                                          style: TextStyle(
+                                            color: primary.withOpacity(0.7),
+                                            fontSize: 12,
+                                          ),
+                                        ),
+                                    ],
+                                  ),
                                 ],
                               ),
-                            ),
-                          ),
+                            );
+                          },
                         ),
-                      );
-                    },
-                  ),
-                  
-                  SizedBox(height: verticalSpacing * 2),
-                  
-                  // Laps section
+                ),
+              ),
+
+              const SizedBox(height: 20),
+
+              /// Buttons: Start/Pause - Lap - Reset
+              Row(
+                children: [
                   Expanded(
-                    child: Container(
-                      width: double.infinity,
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF323F68).withOpacity(0.6),
-                        borderRadius: BorderRadius.circular(15.0),
-                        border: Border.all(
-                          color: Colors.blue.withOpacity(0.3),
-                          width: 1.0,
-                        ),
+                    flex: 2,
+                    child: ElevatedButton.icon(
+                      onPressed: _isRunning ? _stop : _start,
+                      icon: Icon(
+                        _isRunning ? Icons.pause : Icons.play_arrow,
                       ),
-                      child: Column(
-                        children: [
-                          // Laps header
-                          Container(
-                            padding: EdgeInsets.all(isTablet ? 20.0 : 15.0),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text(
-                                  "Laps (${_laps.length})",
-                                  style: TextStyle(
-                                    color: const Color.fromARGB(242, 241, 116, 14),
-                                    fontSize: lapFontSize * 1.1,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                                if (_laps.isNotEmpty)
-                                  IconButton(
-                                    onPressed: () {
-                                      setState(() {
-                                        _laps.clear();
-                                      });
-                                    },
-                                    icon: const Icon(
-                                      Icons.clear_all,
-                                      color: const Color.fromARGB(242, 241, 116, 14),
-                                    ),
-                                    tooltip: "Clear all laps",
-                                  ),
-                              ],
-                            ),
-                          ),
-                          
-                          // Laps list
-                          Expanded(
-                            child: _laps.isEmpty
-                                ? Center(
-                                    child: Column(
-                                      mainAxisAlignment: MainAxisAlignment.center,
-                                      children: [
-                                        Icon(
-                                          Icons.timer_outlined,
-                                          color: Colors.white54,
-                                          size: isTablet ? 48.0 : 36.0,
-                                        ),
-                                        SizedBox(height: 10.0),
-                                        Text(
-                                          "No laps recorded",
-                                          style: TextStyle(
-                                            color: const Color.fromARGB(242, 241, 116, 14),
-                                            fontSize: lapFontSize,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  )
-                                : ListView.builder(
-                                    padding: EdgeInsets.symmetric(
-                                      horizontal: isTablet ? 20.0 : 15.0,
-                                    ),
-                                    itemCount: _laps.length,
-                                    itemBuilder: (context, index) {
-                                      final lapTime = _laps[index];
-                                      final lapDiff = index > 0 
-                                          ? Duration(milliseconds: 
-                                              lapTime.inMilliseconds - _laps[index - 1].inMilliseconds)
-                                          : lapTime;
-                                      
-                                      return Card(
-                                        color: Colors.transparent,
-                                        elevation: 0,
-                                        child: Container(
-                                          padding: EdgeInsets.symmetric(
-                                            vertical: isTablet ? 12.0 : 8.0,
-                                            horizontal: isTablet ? 16.0 : 12.0,
-                                          ),
-                                          decoration: BoxDecoration(
-                                            color: Colors.white.withOpacity(0.05),
-                                            borderRadius: BorderRadius.circular(8.0),
-                                            border: Border.all(
-                                              color: Colors.blue.withOpacity(0.2),
-                                              width: 0.5,
-                                            ),
-                                          ),
-                                          child: Row(
-                                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                            children: [
-                                              Text(
-                                                "Lap ${index + 1}",
-                                                style: TextStyle(
-                                                  color: const Color.fromARGB(242, 241, 116, 14),
-                                                  fontSize: lapFontSize,
-                                                  fontWeight: FontWeight.w500,
-                                                ),
-                                              ),
-                                              Column(
-                                                crossAxisAlignment: CrossAxisAlignment.end,
-                                                children: [
-                                                  Text(
-                                                    _formatDuration(lapTime),
-                                                    style: TextStyle(
-                                                      color: const Color.fromARGB(242, 241, 116, 14),
-                                                      fontSize: lapFontSize,
-                                                      fontWeight: FontWeight.w400,
-                                                    ),
-                                                  ),
-                                                  if (index > 0)
-                                                    Text(
-                                                      "+${_formatDuration(lapDiff)}",
-                                                      style: TextStyle(
-                                                        color: Colors.blue.withOpacity(0.7),
-                                                        fontSize: lapFontSize * 0.8,
-                                                        fontWeight: FontWeight.w300,
-                                                      ),
-                                                    ),
-                                                ],
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                      );
-                                    },
-                                  ),
-                          ),
-                        ],
+                      label: Text(_isRunning ? "Pause" : "Start"),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor:
+                            _isRunning ? Colors.red : Colors.green,
+                        foregroundColor: secondary,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
                       ),
                     ),
                   ),
-                  
-                  SizedBox(height: verticalSpacing * 2),
-                  
-                  // Control buttons
-                  Row(
-                    children: [
-                      // Start/Stop button
-                      Expanded(
-                        flex: 2,
-                        child: Container(
-                          height: isTablet ? 60.0 : 50.0,
-                          child: ElevatedButton(
-                            onPressed: _isRunning ? _stop : _start,
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: _isRunning ? Colors.red : Colors.green,
-                              foregroundColor: Colors.white,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(25.0),
-                              ),
-                              elevation: 5.0,
-                            ),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(
-                                  _isRunning ? Icons.pause : Icons.play_arrow,
-                                  size: isTablet ? 24.0 : 20.0,
-                                ),
-                                SizedBox(width: 8.0),
-                                Text(
-                                  _isRunning ? "Pause" : "Start",
-                                  style: TextStyle(
-                                    fontSize: isTablet ? 18.0 : 16.0,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
+                  const SizedBox(width: 10),
+                  ElevatedButton(
+                    onPressed: _isRunning ? _addLap : null,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.blue,
+                      foregroundColor: secondary,
+                      shape: const CircleBorder(),
+                      padding: const EdgeInsets.all(16),
+                    ),
+                    child: const Icon(Icons.flag),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    flex: 2,
+                    child: ElevatedButton.icon(
+                      onPressed: _reset,
+                      icon: const Icon(Icons.refresh),
+                      label: const Text("Reset"),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.grey,
+                        foregroundColor: secondary,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
                       ),
-                      
-                      SizedBox(width: screenWidth * 0.03),
-                      
-                      // Lap button
-                      Container(
-                        height: isTablet ? 60.0 : 50.0,
-                        width: isTablet ? 60.0 : 50.0,
-                        child: ElevatedButton(
-                          onPressed: _isRunning ? _addLap : null,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.blue,
-                            foregroundColor: Colors.white,
-                            shape: const CircleBorder(),
-                            elevation: 5.0,
-                          ),
-                          child: Icon(
-                            Icons.flag,
-                            size: isTablet ? 28.0 : 24.0,
-                          ),
-                        ),
-                      ),
-                      
-                      SizedBox(width: screenWidth * 0.03),
-                      
-                      // Reset button
-                      Expanded(
-                        flex: 2,
-                        child: Container(
-                          height: isTablet ? 60.0 : 50.0,
-                          child: ElevatedButton(
-                            onPressed: _reset,
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.grey.shade600,
-                              foregroundColor: Colors.white,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(25.0),
-                              ),
-                              elevation: 5.0,
-                            ),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(
-                                  Icons.refresh,
-                                  size: isTablet ? 24.0 : 20.0,
-                                ),
-                                SizedBox(width: 8.0),
-                                Text(
-                                  "Reset",
-                                  style: TextStyle(
-                                    fontSize: isTablet ? 18.0 : 16.0,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
+                    ),
                   ),
                 ],
               ),
-            );
-          },
+            ],
+          ),
         ),
       ),
     );
