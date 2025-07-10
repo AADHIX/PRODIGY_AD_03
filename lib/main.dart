@@ -165,7 +165,7 @@ class _HomeAppState extends State<HomeApp> with TickerProviderStateMixin {
                     child: Text(
                       "Stopwatch",
                       style: TextStyle(
-                        color: Colors.white,
+                        color: const Color.fromARGB(242, 241, 116, 14),
                         fontSize: titleFontSize,
                         fontWeight: FontWeight.bold,
                       ),
@@ -198,7 +198,7 @@ class _HomeAppState extends State<HomeApp> with TickerProviderStateMixin {
                             child: Text(
                               _formatDuration(_currentTime),
                               style: TextStyle(
-                                color: Colors.white,
+                                color: const Color.fromARGB(242, 241, 116, 14),
                                 fontSize: timerFontSize,
                                 fontWeight: FontWeight.w300,
                                 letterSpacing: 2.0,
@@ -238,7 +238,7 @@ class _HomeAppState extends State<HomeApp> with TickerProviderStateMixin {
                                 Text(
                                   "Laps (${_laps.length})",
                                   style: TextStyle(
-                                    color: Colors.white,
+                                    color: const Color.fromARGB(242, 241, 116, 14),
                                     fontSize: lapFontSize * 1.1,
                                     fontWeight: FontWeight.w600,
                                   ),
@@ -252,7 +252,7 @@ class _HomeAppState extends State<HomeApp> with TickerProviderStateMixin {
                                     },
                                     icon: const Icon(
                                       Icons.clear_all,
-                                      color: Colors.white54,
+                                      color: const Color.fromARGB(242, 241, 116, 14),
                                     ),
                                     tooltip: "Clear all laps",
                                   ),
@@ -276,7 +276,7 @@ class _HomeAppState extends State<HomeApp> with TickerProviderStateMixin {
                                         Text(
                                           "No laps recorded",
                                           style: TextStyle(
-                                            color: Colors.white54,
+                                            color: const Color.fromARGB(242, 241, 116, 14),
                                             fontSize: lapFontSize,
                                           ),
                                         ),
@@ -317,7 +317,7 @@ class _HomeAppState extends State<HomeApp> with TickerProviderStateMixin {
                                               Text(
                                                 "Lap ${index + 1}",
                                                 style: TextStyle(
-                                                  color: Colors.white,
+                                                  color: const Color.fromARGB(242, 241, 116, 14),
                                                   fontSize: lapFontSize,
                                                   fontWeight: FontWeight.w500,
                                                 ),
@@ -328,7 +328,7 @@ class _HomeAppState extends State<HomeApp> with TickerProviderStateMixin {
                                                   Text(
                                                     _formatDuration(lapTime),
                                                     style: TextStyle(
-                                                      color: Colors.white,
+                                                      color: const Color.fromARGB(242, 241, 116, 14),
                                                       fontSize: lapFontSize,
                                                       fontWeight: FontWeight.w400,
                                                     ),
